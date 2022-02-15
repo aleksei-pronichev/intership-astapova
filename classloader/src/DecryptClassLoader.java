@@ -6,15 +6,15 @@ import java.io.*;
     и использовал в своих корыстных целях.
     Поэтому весь байт-код мы шифруем и сохраняем в зашифрованном виде - в файлах.
     Чтобы приложение работало, мы создаем CryptClassLoader, который загружает
-    классы из файлов и расшифровывает их.
+    классы из файлов и расшифровывает их с помощью ключа.
  */
 
-public class CryptClassLoader extends ClassLoader{
+public class DecryptClassLoader extends ClassLoader{
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         byte[] cryptClassFromFile = loadClassFromFile(name);
         //вызываем декрипт-метод ---
-        String key = name.concat("secretkey"); // в качестве секретного ключа используем
+        String key = name.concat(getKey()); // в качестве секретного ключа используем
         // имя + ключ, таким образом, каждый класс имеет свой уникальный ключ шифрования
         byte[] decryptClassFromFile = toDecryptBytesArray(cryptClassFromFile, key);
         return defineClass(name, decryptClassFromFile, 0, decryptClassFromFile.length);
@@ -49,8 +49,16 @@ public class CryptClassLoader extends ClassLoader{
         return decryptClass;
     }
 
-//    private String getKey(File file) {
-//        try (BufferedReader reader = new BufferedReader(new Reader() {
-//        }))
-//    }
+    // наш ключ хранится в файловой системе сервера (пока - на нашем "родном" компьютере),
+    // в простом текстовом файле, который состоит из одной строки
+    private String getKey() {
+        String key = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader
+                ("/Desktop/1.txt"))) {
+            key = reader.readLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return key;
+    }
 }
